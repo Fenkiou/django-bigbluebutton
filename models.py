@@ -36,6 +36,12 @@ class Meeting(models.Model):
         help_text=_('The meeting number which need to be unique.'),
         unique=True, default=get_unique_id)
 
+    recorded = models.BooleanField(
+        _('Record the meeting'),
+        help_text=_('The meeting can be recorded if the box is checked.'),
+        default=False
+    )
+
     date = models.DateTimeField(
         _("Schedule on"),
         help_text=_("The date and time the meeting will be."))
@@ -64,9 +70,14 @@ class Meeting(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
+        if self.recorded:
+            record='true'
+        else:
+            record='false'
+
         createMeeting(self.name, self.unique_id, self.welcome_message,
                       self.moderator_pw, self.attendee_pw, self.logout_url,
-                      settings.BBB_URL, settings.BBB_SECRET)
+                      record, settings.BBB_URL, settings.BBB_SECRET)
 
         if self.moderator_pw == '' or self.attendee_pw == '':
             list_meetings = getMeetings(settings.BBB_URL, settings.BBB_SECRET)
@@ -81,6 +92,7 @@ class Meeting(models.Model):
                 if int(meeting.get('meetingID')) == self.unique_id:
                     self.moderator_pw = meeting.get('moderatorPW')
                     self.attendee_pw = meeting.get('attendeePW')
+                break
 
         super(Meeting, self).save(*args, **kwargs)
 
