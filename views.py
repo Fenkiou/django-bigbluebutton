@@ -15,23 +15,26 @@ class MeetingsView(View):
     template_name = 'django_bigbluebutton/meetings.html'
 
     def get(self, request):
-        join_meeting_form = JoinMeetingForm()
-        registered_user_form = RegisteredUserForm()
+        if request.user.is_authenticated():
+            join_meeting_form = JoinMeetingForm()
+            registered_user_form = RegisteredUserForm()
 
-        return_code = 'ERROR'
-        is_meetings = False
-        meetings = []
+            return_code = 'ERROR'
+            is_meetings = False
+            meetings = []
 
-        list_meetings = getMeetings(settings.BBB_URL, settings.BBB_SECRET)
+            list_meetings = getMeetings(settings.BBB_URL, settings.BBB_SECRET)
 
-        if list_meetings is not None:
-            return_code = list_meetings['returncode']
+            if list_meetings is not None:
+                return_code = list_meetings['returncode']
 
-            if list_meetings['meetings'] is not None:
-                meetings = list(list_meetings['meetings'].values())
-                is_meetings = True
+                if list_meetings['meetings'] is not None:
+                    meetings = list(list_meetings['meetings'].values())
+                    is_meetings = True
 
-        return render(request, self.template_name, locals())
+            return render(request, self.template_name, locals())
+        else:
+            return redirect('/')
 
     def post(self, request):
         wrong_password = False
@@ -65,6 +68,7 @@ class MeetingSubscriptionView(View):
     def post(self, request, *args):
         # Get the meeting ID in the URL
         meeting_id = args[0]
+        subscription_success = False
 
         registered_user_form = RegisteredUserForm(request.POST)
 
@@ -99,6 +103,9 @@ class MeetingSubscriptionView(View):
 
             send_mail(subject, content, settings.EMAIL_HOST_USER,
                       [user.mail, ], fail_silently=False)
+
+            subscription_success = True
+            registered_user_form = RegisteredUserForm()
 
         return render(request, self.template_name, locals())
 
