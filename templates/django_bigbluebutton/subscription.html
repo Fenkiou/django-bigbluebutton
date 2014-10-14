@@ -4,6 +4,12 @@
 {% block content %}
     <div class="panel panel-default">
         <div class="panel-body">
+            {% if subscription_success %}
+                <div class="alert alert-success" role="alert">
+                    {% trans "You successfully registered to this meeting." %}<br />
+                    {% trans "You'll receive a mail to inform you that you subscribed." %}
+                </div>
+            {% endif %}
             <form action="{% url 'meeting_subscription' meeting_id %}" method="post">{% csrf_token %}
                 <div class="input-group">
                   <span class="input-group-addon">{% trans "Mail address" %}</span>
