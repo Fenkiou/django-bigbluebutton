@@ -4,7 +4,9 @@ from django.conf import settings
 from django.utils.translation import ugettext as _
 from django.core.mail import send_mail
 
-from django_bigbluebutton.bbb_api import getMeetings, joinMeetingURL
+from django_bigbluebutton.python_bigbluebutton.bbb_api import getMeetings
+from django_bigbluebutton.python_bigbluebutton.bbb_api import joinMeetingURL
+
 from django_bigbluebutton.forms import JoinMeetingForm, RegisteredUserForm
 from django_bigbluebutton.models import RegisteredUser, Meeting
 
@@ -33,9 +35,6 @@ class MeetingsView(View):
 
     def post(self, request):
         wrong_password = False
-
-
-
         return_code = 'ERROR'
         is_meetings = False
         meetings = []

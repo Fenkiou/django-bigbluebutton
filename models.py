@@ -7,7 +7,9 @@ from django.utils.translation import ugettext as _
 
 from cms.models import CMSPlugin
 
-from django_bigbluebutton.bbb_api import getMeetings, createMeeting, endMeeting
+from django_bigbluebutton.python_bigbluebutton.bbb_api import getMeetings
+from django_bigbluebutton.python_bigbluebutton.bbb_api import createMeeting
+from django_bigbluebutton.python_bigbluebutton.bbb_api import endMeeting
 
 from random import randrange
 
