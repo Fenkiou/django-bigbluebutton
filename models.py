@@ -39,7 +39,7 @@ class Meeting(models.Model):
     recorded = models.BooleanField(
         _('Record the meeting'),
         help_text=_('The meeting can be recorded if the box is checked.'),
-        default=False
+        default=None
     )
 
     date = models.DateTimeField(
