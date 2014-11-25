@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.conf import settings
 from django.core.mail import send_mail
+from django.core.mail import send_mass_mail
 from django.utils.translation import ugettext as _
 
 from django.contrib.sites.models import Site
@@ -33,15 +34,17 @@ class MeetingAdmin(admin.ModelAdmin):
                 for meeting in queryset.filter():
                     users = RegisteredUser.objects.filter(meetings=meeting)
 
-                    mails = []
-
-                    for user in users:
-                        mails.append(user.mail)
-
                     subject = _("Informations for the meeting : {}".format(meeting.name))
 
-                    send_mail(subject, mail_content, settings.EMAIL_HOST_USER,
-                              mails, fail_silently=False)
+                    messages = []
+
+                    for user in users:
+                        message = (subject, mail_content,
+                                   settings.EMAIL_HOST_USER,
+                                   [user.mail, ])
+                        messages.append(message)
+
+                    send_mass_mail(messages, fail_silently=False)
 
                     self.message_user(request, _("The confirmation mail was sent."))
                     return HttpResponseRedirect(request.get_full_path())
@@ -80,15 +83,17 @@ class MeetingAdmin(admin.ModelAdmin):
                 for meeting in queryset.filter():
                     users = PreRegisteredUser.objects.filter(meetings=meeting)
 
-                    mails = []
-
-                    for user in users:
-                        mails.append(user.mail)
-
                     subject = _("Subscription link to the meeting : {}".format(meeting.name))
 
-                    send_mail(subject, mail_content, settings.EMAIL_HOST_USER,
-                              mails, fail_silently=False)
+                    messages = []
+
+                    for user in users:
+                        message = (subject, mail_content,
+                                   settings.EMAIL_HOST_USER,
+                                   [user.mail, ])
+                        messages.append(message)
+
+                    send_mass_mail(messages, fail_silently=False)
 
                     self.message_user(request, _("The pre-registering mail was sent."))
                     return HttpResponseRedirect(request.get_full_path())
