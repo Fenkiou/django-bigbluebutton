@@ -7,7 +7,9 @@ from django.utils.translation import ugettext as _
 
 from cms.models import CMSPlugin
 
-from django_bigbluebutton.bbb_api import getMeetings, createMeeting, endMeeting
+from django_bigbluebutton.python_bigbluebutton.bbb_api import getMeetings
+from django_bigbluebutton.python_bigbluebutton.bbb_api import createMeeting
+from django_bigbluebutton.python_bigbluebutton.bbb_api import endMeeting
 
 from random import randrange
 
@@ -33,6 +35,12 @@ class Meeting(models.Model):
         _('Unique number'),
         help_text=_('The meeting number which need to be unique.'),
         unique=True, default=get_unique_id)
+
+    recorded = models.BooleanField(
+        _('Record the meeting'),
+        help_text=_('The meeting can be recorded if the box is checked.'),
+        default=None
+    )
 
     date = models.DateTimeField(
         _("Schedule on"),
@@ -62,9 +70,14 @@ class Meeting(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
+        if self.recorded:
+            record='true'
+        else:
+            record='false'
+
         createMeeting(self.name, self.unique_id, self.welcome_message,
                       self.moderator_pw, self.attendee_pw, self.logout_url,
-                      settings.BBB_URL, settings.BBB_SECRET)
+                      record, settings.BBB_URL, settings.BBB_SECRET)
 
         if self.moderator_pw == '' or self.attendee_pw == '':
             list_meetings = getMeetings(settings.BBB_URL, settings.BBB_SECRET)
@@ -79,6 +92,7 @@ class Meeting(models.Model):
                 if int(meeting.get('meetingID')) == self.unique_id:
                     self.moderator_pw = meeting.get('moderatorPW')
                     self.attendee_pw = meeting.get('attendeePW')
+                break
 
         super(Meeting, self).save(*args, **kwargs)
 

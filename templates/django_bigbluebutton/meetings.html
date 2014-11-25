@@ -14,10 +14,18 @@
             <table align="center" class="table table-striped">
                 <th>{% trans "Name of the meeting" %}</th>
                 <th>{% trans "State of the meeting" %}</th>
+                <th>{% trans "Delete the meeting" %}</th>
             {% for meeting in meetings %}
                 <tr>
                     <td>{{ meeting.meetingName }}</td>
                     <td>{% if meeting.running == 'true' %}{% trans "Running" %}{% else %}{% trans "Not running" %}{% endif %}</td>
+                    <td>
+                        <form action="{% url 'meetings' %}" method="post">{% csrf_token %}
+                            <input type="hidden" name="moderator_pw" value="{{ meeting.moderatorPW }}" />
+                            <input type="hidden" name="meeting_id" value="{{ meeting.meetingID }}" />
+                            <button type="submit" class="btn btn-danger" name="delete">{% trans "Delete" %}</button>
+                        </form>
+                    </td>
                 </tr>
             {% endfor %}
             </table>

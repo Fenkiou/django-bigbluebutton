@@ -4,7 +4,10 @@ from django.conf import settings
 from django.utils.translation import ugettext as _
 from django.core.mail import send_mail
 
-from django_bigbluebutton.bbb_api import getMeetings, joinMeetingURL
+from django_bigbluebutton.python_bigbluebutton.bbb_api import getMeetings
+from django_bigbluebutton.python_bigbluebutton.bbb_api import joinMeetingURL
+from django_bigbluebutton.python_bigbluebutton.bbb_api import endMeeting
+
 from django_bigbluebutton.forms import JoinMeetingForm, RegisteredUserForm
 from django_bigbluebutton.models import RegisteredUser, Meeting
 
@@ -13,43 +16,57 @@ class MeetingsView(View):
     template_name = 'django_bigbluebutton/meetings.html'
 
     def get(self, request):
-        join_meeting_form = JoinMeetingForm()
-        registered_user_form = RegisteredUserForm()
+        if request.user.is_authenticated():
+            join_meeting_form = JoinMeetingForm()
+            registered_user_form = RegisteredUserForm()
 
-        return_code = 'ERROR'
-        is_meetings = False
-        meetings = []
+            return_code = 'ERROR'
+            is_meetings = False
+            meetings = []
 
-        list_meetings = getMeetings(settings.BBB_URL, settings.BBB_SECRET)
+            list_meetings = getMeetings(settings.BBB_URL, settings.BBB_SECRET)
 
-        if list_meetings is not None:
-            return_code = list_meetings['returncode']
+            if list_meetings is not None:
+                return_code = list_meetings['returncode']
 
-            if list_meetings['meetings'] is not None:
-                meetings = list(list_meetings['meetings'].values())
-                is_meetings = True
+                if list_meetings['meetings'] is not None:
+                    meetings = list(list_meetings['meetings'].values())
+                    is_meetings = True
 
-        return render(request, self.template_name, locals())
+            return render(request, self.template_name, locals())
+        else:
+            return redirect('/')
 
     def post(self, request):
-        wrong_password = False
+        if request.user.is_authenticated():
+            if 'delete' in request.POST:
+                meeting_id = request.POST.get('meeting_id')
+                moderator_pw = request.POST.get('moderator_pw')
+
+                try:
+                    meeting = Meeting.objects.get(unique_id=int(meeting_id))
+                    meeting.delete()
+                except Meeting.DoesNotExist:
+                    endMeeting(meeting_id, moderator_pw,
+                               settings.BBB_URL, settings.BBB_SECRET)
 
 
+            return_code = 'ERROR'
+            is_meetings = False
+            meetings = []
 
-        return_code = 'ERROR'
-        is_meetings = False
-        meetings = []
+            list_meetings = getMeetings(settings.BBB_URL, settings.BBB_SECRET)
 
-        list_meetings = getMeetings(settings.BBB_URL, settings.BBB_SECRET)
+            if list_meetings is not None:
+                return_code = list_meetings['returncode']
 
-        if list_meetings is not None:
-            return_code = list_meetings['returncode']
+                if list_meetings['meetings'] is not None:
+                    meetings = list(list_meetings['meetings'].values())
+                    is_meetings = True
 
-            if list_meetings['meetings'] is not None:
-                meetings = list(list_meetings['meetings'].values())
-                is_meetings = True
-
-        return render(request, self.template_name, locals())
+            return render(request, self.template_name, locals())
+        else:
+            return redirect('/')
 
 
 class MeetingSubscriptionView(View):
@@ -66,6 +83,7 @@ class MeetingSubscriptionView(View):
     def post(self, request, *args):
         # Get the meeting ID in the URL
         meeting_id = args[0]
+        subscription_success = False
 
         registered_user_form = RegisteredUserForm(request.POST)
 
@@ -100,6 +118,9 @@ class MeetingSubscriptionView(View):
 
             send_mail(subject, content, settings.EMAIL_HOST_USER,
                       [user.mail, ], fail_silently=False)
+
+            subscription_success = True
+            registered_user_form = RegisteredUserForm()
 
         return render(request, self.template_name, locals())
 

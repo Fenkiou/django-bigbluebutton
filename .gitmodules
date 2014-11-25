@@ -1,0 +1,3 @@
+[submodule "python_bigbluebutton"]
+	path = python_bigbluebutton
+	url = git@github.com:FenkiouSoMutch/python_bigbluebutton.git
